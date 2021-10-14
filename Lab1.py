@@ -15,31 +15,6 @@ tf.random.set_seed(1618)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 #ALGORITHM = "guesser"
-#ALGORITHM = "tf_net"
-ALGORITHM = "tf_conv"
-
-#DATASET = "mnist_d"
-#DATASET = "mnist_f"
-DATASET = "cifar_10"
-#DATASET = "cifar_100_f"
-#DATASET = "cifar_100_c"
-import os
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.utils import to_categorical
-import random
-
-
-random.seed(1618)
-np.random.seed(1618)
-#tf.set_random_seed(1618)   # Uncomment for TF1.
-tf.random.set_seed(1618)
-
-#tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
-#ALGORITHM = "guesser"
 ALGORITHM = "tf_net"
 #ALGORITHM = "tf_conv"
 
@@ -108,9 +83,15 @@ def guesserClassifier(xTest):
 def buildTFNeuralNet(x, y, eps = ANN_EPOCH):
     # TODO: Implement a standard ANN here.
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
-    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
-    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+    if DATASET == "mnist_d" or DATASET == "mnist_f":
+      model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+      model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+      model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+    else:
+      model.add(tf.keras.layers.Dense(1024, activation='relu'))
+      model.add(tf.keras.layers.Dense(512, activation='relu'))
+      model.add(tf.keras.layers.Dense(64, activation='relu'))
+      model.add(tf.keras.layers.Dense(64, activation='relu'))
     model.add(tf.keras.layers.Dense(NUM_CLASSES, activation='softmax'))
     model.compile(optimizer='adam', loss=tf.keras.losses.categorical_crossentropy)
     model.fit(x, y, epochs=eps)
