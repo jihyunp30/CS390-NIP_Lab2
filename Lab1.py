@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import tensorflow as tf
@@ -15,34 +14,84 @@ tf.random.set_seed(1618)
 #tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-ALGORITHM = "guesser"
+#ALGORITHM = "guesser"
 #ALGORITHM = "tf_net"
+ALGORITHM = "tf_conv"
+
+#DATASET = "mnist_d"
+#DATASET = "mnist_f"
+DATASET = "cifar_10"
+#DATASET = "cifar_100_f"
+#DATASET = "cifar_100_c"
+import os
+import numpy as np
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.utils import to_categorical
+import random
+
+
+random.seed(1618)
+np.random.seed(1618)
+#tf.set_random_seed(1618)   # Uncomment for TF1.
+tf.random.set_seed(1618)
+
+#tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+#ALGORITHM = "guesser"
+ALGORITHM = "tf_net"
 #ALGORITHM = "tf_conv"
 
-DATASET = "mnist_d"
+#DATASET = "mnist_d"
 #DATASET = "mnist_f"
-#DATASET = "cifar_10"
+DATASET = "cifar_10"
 #DATASET = "cifar_100_f"
 #DATASET = "cifar_100_c"
 
 if DATASET == "mnist_d":
     NUM_CLASSES = 10
+    ANN_EPOCH = 10
     IH = 28
     IW = 28
     IZ = 1
     IS = 784
+    NUM_NEURON = 256
 elif DATASET == "mnist_f":
     NUM_CLASSES = 10
+    ANN_EPOCH = 10
     IH = 28
     IW = 28
     IZ = 1
     IS = 784
+    NUM_NEURON = 256
 elif DATASET == "cifar_10":
-    pass                                 # TODO: Add this case.
+    # TODO: Add this case.
+    NUM_CLASSES = 10
+    ANN_EPOCH = 30
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = 3072
+    NUM_NEURON = 256
 elif DATASET == "cifar_100_f":
-    pass                                 # TODO: Add this case.
+    # TODO: Add this case.
+    NUM_CLASSES = 100
+    ANN_EPOCH = 30
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = 3072
+    NUM_NEURON = 256
 elif DATASET == "cifar_100_c":
-    pass                                 # TODO: Add this case.
+    # TODO: Add this case.
+    NUM_CLASSES = 20
+    ANN_EPOCH = 30
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = 3072
+    NUM_NEURON = 256
 
 
 #=========================<Classifier Functions>================================
@@ -56,16 +105,43 @@ def guesserClassifier(xTest):
     return np.array(ans)
 
 
-def buildTFNeuralNet(x, y, eps = 6):
-    pass        #TODO: Implement a standard ANN here.
-    return None
+def buildTFNeuralNet(x, y, eps = ANN_EPOCH):
+    # TODO: Implement a standard ANN here.
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+    model.add(tf.keras.layers.Dense(NUM_NEURON, activation='relu'))
+    model.add(tf.keras.layers.Dense(NUM_CLASSES, activation='softmax'))
+    model.compile(optimizer='adam', loss=tf.keras.losses.categorical_crossentropy)
+    model.fit(x, y, epochs=eps)
+    return model
 
 
-def buildTFConvNet(x, y, eps = 10, dropout = True, dropRate = 0.2):
-    pass        #TODO: Implement a CNN here. dropout option is required.
-    return None
+def buildTFConvNet(x, y, eps = 20, dropout = True, dropRate = 0.2):
+    #TODO: Implement a CNN here. dropout option is required.
+    model = tf.keras.Sequential()
+    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=3, padding='same', activation ='relu',
+                                     input_shape=[32, 32, 3]))
+    model.add(tf.keras.layers.Conv2D(filters=32, kernel_size=3, padding='same', activation='relu'))
+    model.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2, padding='valid'))
 
-#=========================<Pipeline Functions>==================================
+    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'))
+    model.add(tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='same', activation='relu'))
+    model.add(tf.keras.layers.MaxPool2D(pool_size=2, strides=2, padding='valid'))
+
+    model.add(tf.keras.layers.Flatten())
+    if dropout:
+        model.add(tf.keras.layers.Dropout(dropRate))
+    model.add(tf.keras.layers.Dense(128, activation='relu'))
+    model.add(tf.keras.layers.Dense(NUM_CLASSES, activation='softmax'))
+
+    model.compile(optimizer='adam', loss=tf.keras.losses.categorical_crossentropy)
+    model.fit(x, y, epochs=eps)
+
+    return model
+
+# =========================<Pipeline Functions>==================================
+
 
 def getRawData():
     if DATASET == "mnist_d":
@@ -75,11 +151,17 @@ def getRawData():
         mnist = tf.keras.datasets.fashion_mnist
         (xTrain, yTrain), (xTest, yTest) = mnist.load_data()
     elif DATASET == "cifar_10":
-        pass      # TODO: Add this case.
+        # TODO: Add this case.
+        cifar = tf.keras.datasets.cifar10
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data()
     elif DATASET == "cifar_100_f":
-        pass      # TODO: Add this case.
+        # TODO: Add this case.
+        cifar = tf.keras.datasets.cifar100
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data(label_mode="fine")
     elif DATASET == "cifar_100_c":
-        pass      # TODO: Add this case.
+        # TODO: Add this case.
+        cifar = tf.keras.datasets.cifar100
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data(label_mode="coarse")
     else:
         raise ValueError("Dataset not recognized.")
     print("Dataset: %s" % DATASET)
@@ -93,6 +175,7 @@ def getRawData():
 
 def preprocessData(raw):
     ((xTrain, yTrain), (xTest, yTest)) = raw
+    xTrain, xTest = xTrain / 255.0, xTest / 255.0
     if ALGORITHM != "tf_conv":
         xTrainP = xTrain.reshape((xTrain.shape[0], IS))
         xTestP = xTest.reshape((xTest.shape[0], IS))
